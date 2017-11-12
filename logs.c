@@ -41,7 +41,23 @@ url_t * nueva_url(char* url_str){
 
 //compara dos ips segun sus enteros
 int cmp_ips (const char * ip1, const char * ip2){
-	
+	char** ipn1 = split(ip1,'.');
+	char** ipn2 = split(ip2,'.');
+	for (int i = 0; i < 4; i++) {
+		if ( atoi(ipn1[i]) > atoi(ipn2[i]) ) {
+			free_strv(ipn1);
+			free_strv(ipn2);
+			return 1;
+		}
+		if ( atoi(ipn1[i]) > atoi(ipn2[i]) ) {
+			free_strv(ipn1);
+			free_strv(ipn2);
+			return -1;
+		}
+	}
+	free_strv(ipn1);
+	free_strv(ipn2);
+	return 0;
 	
 }
 
