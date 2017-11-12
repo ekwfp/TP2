@@ -10,13 +10,11 @@
 #include "strutil.h"
 
 typedef struct servidor{
-	
 	abb_t* abb_ips; // ips
 	heap_t* mas_visitados;
 	hash_t* hash_ip; // hash_ip_ocurrencias
 	hash_t* hash_url; // hash_url_ocurrencias
 	hash_t* hash_dos;// hash_esDoS
-	bool iniciado;
 	
 }servidor_t;
 

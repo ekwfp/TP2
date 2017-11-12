@@ -34,7 +34,10 @@ void oki(void){
 	fprintf(stdout, "OK\n");
 }
 
-void dest_ip_ocurrencias (void * vec){
+void dest_ip (void * vec){
+	ip_t* ip_actual = vec;
+	horario_t* horario_actual= ip_actual->horario;
+	horario_actual->horarios;
 	vector_t* vector = (vector_t*)vec;
 	vector_destruir(vector,NULL);
 }
@@ -137,10 +140,13 @@ void servidor_destruir(servidor_t * servidor){
 	if(!servidor) return;
 	hash_destruir(servidor->hash_ip);
 	hash_destruir(servidor->hash_url);
+	hash_destruir(servidor->hash_dos);
 	heap_destruir(servidor->mas_visitados,&dest_url);
 	abb_destruir(servidor->abb_ips);
 	free(servidor);
 }
+
+
 
 
 bool procesar_log(FILE * log, servidor_t* servidor){
@@ -151,7 +157,6 @@ bool procesar_log(FILE * log, servidor_t* servidor){
     	ip_t* ip = NULL;
     	url_t * url = NULL;
     	if( !hash_pertenece(servidor->hash_dos,campos[0])){ // si no es DoS lo proceso, sino no hace falta porque 1) ya es dos => esta en el abb
-		
 	    	if (hash_pertenece(servidor->hash_ip, campos[0])){ //si existe agrego horario 
 	    		ip= hash_obtener(servidor->hash_ip, campos[0]);				
 	    		if(ip_es_dos(ip, campos[1])) 
@@ -163,19 +168,28 @@ bool procesar_log(FILE * log, servidor_t* servidor){
 				hash_guardar(servidor->hash_ip, campos[0], ip); // la anoto en el hash
 			}
 		}
-    	ip_es_dos(ip);
-    	if (hash_pertenece(servidor->hash_url, campos[3])) { //si existe suma
+    	if (hash_pertenece(servidor->hash_url, campos[3])){ //si existe suma
     		url = hash_obtener(servidor->hash_url,campos[3]);
-    		*url->cantidad++;
+    		url->cantidad++;
+    		hash_guardar(servidor->hash_url,campos[3],url);
 		} 
-		else{ // sino crea con cantidad en 1
+		else{ // sino crea con cantidad en 1  y la mete en el heap
+		// esto permite asegurar que no se van a encolar repetidos en el heap
 			url = nueva_url(campos[3]);
 	    	hash_guardar(servidor->hash_url,campos[3], url );
+	    	heap_encolar(servidor->mas_visitados, url);
 		}
         free_strv(campos); 
     }
 	free(linea); 
-	return true; // devuelvo el vector lleno
+	return true; 
+}
+
+
+void actualizar_visitados(servidor_t* servidor){
+	if (!servidor) return;
+	if (!servidor->mas_visitados) return;
+	heap_reorganizar(servidor->mas_visitados);
 }
 
 bool agregar_archivo(servidor_t * servidor, char** vcomandos){
@@ -187,11 +201,11 @@ bool agregar_archivo(servidor_t * servidor, char** vcomandos){
 	if (servidor->iniciado) vaciar_hashes(servidor); //vacio la lista de DoS del log anterior
 	servidor->iniciado = true;
 	if (!procesar_log(log, servidor)) return false;
+	actualizar_visitados(servidor);
 	reportar_dos(servidor->hash_dos);
 	fclose(log);
 	return true; // el ok lo imprime ejecutar_comandos
 }
-
 
 //vacia los hashes dos y los horarios de ip
 void vaciar_hashes(servidor_t* servidor){
@@ -208,7 +222,6 @@ void reportar_dos(hash_t* hash_dos){
 	char* ip_actual = NULL;
 	heap_t* heap = heap_crear(cmp_ips_inversa);
 	if (!heap) return;
-	fprintf(stdout,"Visitantes\n", ip_actual);
 	while(!hash_iter_al_final(iter)){
 		ip_actual = strdup(hash_iter_ver_actual(iter));
 		heap_encolar(heap, ip_actual);

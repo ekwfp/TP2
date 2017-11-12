@@ -22,6 +22,10 @@ typedef int (*cmp_func_t) (const void *a, const void *b);
  */
 void heap_sort(void *elementos[], size_t cant, cmp_func_t cmp);
 
+
+
+
+
 /*
  * Implementación de un TAD cola de prioridad, usando un max-heap.
  *
@@ -48,6 +52,9 @@ heap_t *heap_crear(cmp_func_t cmp);
  * los valores de uno en uno
 */
 heap_t *heap_crear_arr(void *arreglo[], size_t n, cmp_func_t cmp);
+
+// actualiza un heap
+void heap_reorganizar(heap_t* heap);
 
 /* Elimina el heap, llamando a la función dada para cada elemento del mismo.
  * El puntero a la función puede ser NULL, en cuyo caso no se llamará.

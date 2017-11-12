@@ -27,12 +27,11 @@ en el tp dice "no es necesario memorizar las entradas entre distintos archivos l
 typedef struct horario{
 	int n_req_2s; // numero de peticiones en 2 segundos, si es 5 o mayor es DoS
 	//vector_t* horarios; // se guarda temporalmente algunos horarios para buscar DoS
-	time_t** horarios;
+	time_t hora;
 }horario_t;
 
 
 typedef struct ip{
-	int** ip_int; // un vector de 4 enteros {192,168,0,1}
 	char* ip_str; // la ip en string "192.168.0.1"   -> hara falta?
 	horario_t* horario; 
 }ip_t;
@@ -55,14 +54,14 @@ ip_t* nueva_ip(char* ip_str, char* horario);
 url_t * nueva_url(char* url_str);
 
 //compara dos ips segun sus enteros
-int cmp_ips (const char * ip1, const char * ip2);
+int cmp_ips (const void* ip1, const void * ip2);
 
 //compara dos ips segun sus enteros, inversa. (Para reporte DoS)
-int cmp_ips_inversa (const char * ip1, const char * ip2);
+int cmp_ips_inversa (const void* ip1, const void * ip2);
 
 
 // destruye un ip_t
-void dest_ip(void *);
+void dest_ip(void * ip);
 
 
 
