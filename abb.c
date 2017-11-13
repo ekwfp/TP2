@@ -75,10 +75,10 @@ void *abb_obtener(const abb_t *arbol, const char *clave){
 		}
 			return NULL;
 	}
-		if (arbol->der){
-			return abb_obtener(arbol->der,clave);
-		}
-			return NULL;
+	if (arbol->der){
+		return abb_obtener(arbol->der,clave);
+	}
+	return NULL;
 }
 
 bool abb_pertenece(const abb_t *arbol, const char *clave){

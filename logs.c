@@ -21,30 +21,30 @@ bool validar_ip(char * ip_str){
 	return true;
 }
 
-bool ip_es_dos(ip_t* ip, char* h_actual){
-	if (!ip) return false;
-	horario_t * horas = ip->horario;
+bool ip_es_dos(ip_t** ip, char* h_actual){
+	if (!(*ip)) return false;
+	horario_t * horas = (*ip)->horario;
 	time_t time_actual = char_a_time(h_actual);
 	
 	if( horas->n_req_2s == 0) {
-		horas->hora = time_actual;
-		horas->n_req_2s++;
+		(*ip)->horario->hora = time_actual;
+		(*ip)->horario->n_req_2s++;
 		return false;
 	}
 	double diff  = difftime(time_actual,horas->hora);
 	double interv = INTERVALO;
 	//si la diferencia entre la primer hora es <2'' 
 	if (diff < interv) {
-		horas->n_req_2s++; 
-		if(horas->n_req_2s >= MAX_INTENTOS) return true; //si ya van 5 es dos
+		(*ip)->horario->n_req_2s++; 
+		if((*ip)->horario->n_req_2s >= MAX_INTENTOS) return true; //si ya van 5 es dos
 	}
 	//descarto posibilidad 
-	horas->hora = time_actual;
-	horas->n_req_2s = 1;
+	(*ip)->horario->hora = time_actual;
+	(*ip)->horario->n_req_2s = 1;
 	return false;
 }
 
-horario_t nuevo_horario(char* h_str){
+horario_t * nuevo_horario(char* h_str){
 	horario_t* horario = calloc(1,sizeof(horario_t));
 	if(!horario) return NULL;
 	horario->n_req_2s = 0;
@@ -77,7 +77,7 @@ ip_t* nueva_ip(char* ip_str, char* horario){
 //recibe una ruta_str y crea una url_t
 url_t * nueva_url(char* url_str){
 	char * dir = strdup(url_str);
-	if(!dir) return NULL
+	if(!dir) return NULL;
 	url_t* url = calloc(1,sizeof(url_t));
 	if(!url) {
 		free(dir);
@@ -89,6 +89,26 @@ url_t * nueva_url(char* url_str){
 }
 
 //compara dos ips segun sus enteros
+int cmp_ips_abb (const char * ip1, const char * ip2){
+	char** ipn1 = split(ip1,'.');
+	char** ipn2 = split(ip2,'.');
+	for (int i = 0; i < 4; i++) {
+		if ( atoi(ipn1[i]) > atoi(ipn2[i]) ) {
+			free_strv(ipn1);
+			free_strv(ipn2);
+			return 1;
+		}
+		if ( atoi(ipn1[i]) < atoi(ipn2[i]) ) {
+			free_strv(ipn1);
+			free_strv(ipn2);
+			return -1;
+		}
+	}
+	free_strv(ipn1);
+	free_strv(ipn2);
+	return 0;
+}
+
 int cmp_ips (const void * ip1, const void * ip2){
 	char** ipn1 = split((char*)ip1,'.');
 	char** ipn2 = split((char*)ip2,'.');
@@ -98,7 +118,7 @@ int cmp_ips (const void * ip1, const void * ip2){
 			free_strv(ipn2);
 			return 1;
 		}
-		if ( atoi(ipn1[i]) > atoi(ipn2[i]) ) {
+		if ( atoi(ipn1[i]) < atoi(ipn2[i]) ) {
 			free_strv(ipn1);
 			free_strv(ipn2);
 			return -1;
@@ -107,7 +127,6 @@ int cmp_ips (const void * ip1, const void * ip2){
 	free_strv(ipn1);
 	free_strv(ipn2);
 	return 0;
-	
 }
 
 int cmp_ips_inversa (const void * ip1, const void * ip2){
@@ -119,7 +138,7 @@ int cmp_ips_inversa (const void * ip1, const void * ip2){
 			free_strv(ipn2);
 			return -1;
 		}
-		if ( atoi(ipn1[i]) > atoi(ipn2[i]) ) {
+		if ( atoi(ipn1[i]) < atoi(ipn2[i]) ) {
 			free_strv(ipn1);
 			free_strv(ipn2);
 			return 1;
@@ -133,10 +152,25 @@ int cmp_ips_inversa (const void * ip1, const void * ip2){
 // destruye un ip_t
 void dest_ip(void * ip){
 	 if (!ip) return;
-	 free(ip->ip_str);
-	 free(ip->horario);
-	 free(ip);
+	 ip_t* temp = (ip_t*) ip;
+	 free(temp->ip_str);
+	 free(temp->horario);
+	 free(temp);
 }
 
+int cmp_url(const void* url1, const void* url2){
+	url_t* temp1 = (url_t*) url1;
+	url_t* temp2 = (url_t*) url2;
+	if ( temp1->cantidad > temp2->cantidad)  	return 1;
+	if ( temp1->cantidad < temp2->cantidad)  	return -1;
+	return 0;
+}
+
+void dest_url(void* url){
+	if (!url) return;
+	url_t* temp = (url_t*) url;
+	free(temp->ruta);
+	free(temp);
+}
 
 

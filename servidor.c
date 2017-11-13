@@ -18,8 +18,12 @@ void vaciar_hashes(servidor_t* servidor);
 // Recibe un hash con ips y las imprime por pantalla en order creciente
 void reportar_dos(hash_t* hash_dos);
 
+
+bool agregar_archivo(servidor_t* servidor, char** vcomandos);
+bool ver_visitantes(servidor_t* servidor, char** vcomandos);
+bool ver_mas_visitados(servidor_t* servidor, char** vcomandos);
 		
-void corte_str(char** str){
+void corte_str(char** linea){
 	char* corte = strchr(*linea, 10); //\n
  	char* corte2 = strchr(*linea, 13);//\v
 	if (corte) *corte=0;
@@ -32,14 +36,6 @@ void mensaje_error(char* comando){
 
 void oki(void){
 	fprintf(stdout, "OK\n");
-}
-
-void dest_ip (void * vec){
-	ip_t* ip_actual = vec;
-	horario_t* horario_actual= ip_actual->horario;
-	horario_actual->horarios;
-	vector_t* vector = (vector_t*)vec;
-	vector_destruir(vector,NULL);
 }
 
 //destruye las estructuras internas del servidor
@@ -55,20 +51,34 @@ void exit_servidor(int errores, servidor_t* srv, abb_t* abb, heap_t* heap, hash_
 
 //crea estructura vacia
 servidor_t* servidor_crear(){
-	
 	//reservo memoria
 	servidor_t * servidor=  (servidor_t*) calloc (1,sizeof(servidor_t));
 	if (servidor==NULL) return NULL;
-	abb_t* ips = abb_crear(&cmp_ips, &dest_ip);
-	if (!ips) {	exit_servidor(1, servidor, NULL,NULL,NULL,NULL); return NULL; }
+	abb_t* ips = abb_crear(&cmp_ips_abb, &dest_ip);
+	if (!ips){	
+		exit_servidor(1, servidor, NULL,NULL,NULL,NULL); 
+		return NULL; 
+	}
 	heap_t* mas_visitados = heap_crear(&cmp_url);
-	if (!mas_visitados) {	exit_servidor(2, servidor, ips,NULL,NULL,NULL); return NULL; }
+	if (!mas_visitados){	
+		exit_servidor(2, servidor, ips,NULL,NULL,NULL);
+		return NULL; 
+	}
 	hash_t* hash_url = hash_crear(&dest_url);
-	if (!hash_url) {	exit_servidor(3, servidor, ips,mas_visitados,NULL,NULL); return NULL; }
-	hash_t* hash_ip = hash_crear(&dest_ip_ocurrencias);
-	if (!hash_ip) {	exit_servidor(4, servidor, ips,mas_visitados,hash_url,NULL); return NULL; }
+	if (!hash_url){
+		exit_servidor(3, servidor, ips,mas_visitados,NULL,NULL);
+	 	return NULL; 
+	}
+	hash_t* hash_ip = hash_crear(&dest_ip);
+	if (!hash_ip){	
+		exit_servidor(4, servidor, ips,mas_visitados,hash_url,NULL); 
+		return NULL; 
+	}
 	hash_t* hash_dos = hash_crear(NULL);
-	if (!hash_dos) {	exit_servidor(5, servidor, ips,mas_visitados,hash_url,hash_ip); return NULL; }
+	if (!hash_dos){	
+		exit_servidor(5, servidor, ips,mas_visitados,hash_url,hash_ip);
+		return NULL; 
+	}
 	
 	//asigno
 	servidor->abb_ips = ips;
@@ -147,11 +157,14 @@ void servidor_destruir(servidor_t * servidor){
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////
+/////////// PROCESOS
 
+/////////// AGREGAR_ARCHIVO
 
 bool procesar_log(FILE * log, servidor_t* servidor){
-	char* linea = NULL; size_t i=0, lineas =0, capacidad = 0; ssize_t leidos; //combo getline
-	while((leidos = getline(&linea,&capacidad,csv)) > 0){ // mientras lineas
+	char* linea = NULL; size_t capacidad = 0; ssize_t leidos; //combo getline
+	while((leidos = getline(&linea,&capacidad,log)) > 0){ // mientras lineas
 		corte_str(&linea);
 		char** campos = split(linea,'\t'); // separo la linea en 4 campos
     	ip_t* ip = NULL;
@@ -159,7 +172,7 @@ bool procesar_log(FILE * log, servidor_t* servidor){
     	if( !hash_pertenece(servidor->hash_dos,campos[0])){ // si no es DoS lo proceso, sino no hace falta porque 1) ya es dos => esta en el abb
 	    	if (hash_pertenece(servidor->hash_ip, campos[0])){ //si existe agrego horario 
 	    		ip= hash_obtener(servidor->hash_ip, campos[0]);				
-	    		if(ip_es_dos(ip, campos[1])) 
+	    		if(ip_es_dos(&ip, campos[1])) 
 	    			hash_guardar(servidor->hash_dos, campos[0], NULL); // solo hace falta listar
 			}
 			else{ // sino creo nueva ip
@@ -193,7 +206,7 @@ void actualizar_visitados(servidor_t* servidor){
 }
 
 bool agregar_archivo(servidor_t * servidor, char** vcomandos){
-	FILE * log = fopen(file_n, "rt");
+	FILE * log = fopen(vcomandos[1], "rt");
 	if (!log){
 		mensaje_error(AGREGAR);
 		return false;	
@@ -209,8 +222,26 @@ bool agregar_archivo(servidor_t * servidor, char** vcomandos){
 
 //vacia los hashes dos y los horarios de ip
 void vaciar_hashes(servidor_t* servidor){
+	/*para cada ip en dos
+	pasar el contador de horarios a 0
+	-> por el momento probar asi, sino funciona iterar todas las ips con el abb_inorder
+	*/
+	hash_iter_t* iter = hash_iter_crear(servidor->hash_dos);
+	if(!iter) return;
+	const char* ip_str = NULL;
+	ip_t* ip_actual = NULL;
+	while(!hash_iter_al_final(iter)){
+		ip_str = hash_iter_ver_actual(iter);
+		ip_actual = hash_obtener(servidor->hash_ip, ip_str);
+		ip_actual->horario->n_req_2s = 0;
+		hash_guardar(servidor->hash_ip, ip_str, ip_actual);
+		hash_iter_avanzar(iter);
+	}
+	hash_iter_destruir(iter);
+	
+	// reseteo el hash de DoS
 	hash_destruir(servidor->hash_dos);
-	hash_dos = hash_crear(NULL);
+	hash_t * hash_dos = hash_crear(NULL);
 	if (!hash_dos) return;
 	servidor->hash_dos = hash_dos;
 }
@@ -235,3 +266,42 @@ void reportar_dos(hash_t* hash_dos){
 	hash_iter_destruir(iter);
 	heap_destruir(heap, NULL);
 }
+
+/////////// VER MAS VISITADOS
+
+bool ver_mas_visitados(servidor_t * servidor, char** vcomandos){
+	if(!servidor || !servidor->mas_visitados) return false;
+	
+	lista_t * desencolados  = lista_crear();
+	if(!desencolados) return false;
+	
+	size_t n = heap_cantidad(servidor->mas_visitados);
+	size_t mostrar = (size_t)atoi(vcomandos[1]);
+	url_t* url = NULL;
+	
+	if (mostrar > n) mostrar = n; // maximo posible para mostrar
+	fprintf(stdout,"Sitios más visitados:\n");
+	while(mostrar>0){
+		url = heap_desencolar(servidor->mas_visitados);
+		lista_insertar_ultimo(desencolados,url);
+		fprintf(stdout,"\t%s - %zu\n", url->ruta, url->cantidad);
+		mostrar--;
+	}
+	
+	while(!lista_esta_vacia(desencolados)){
+		heap_encolar(servidor->mas_visitados, lista_borrar_primero(desencolados));					
+	}
+	lista_destruir(desencolados,NULL);
+	return true;
+}
+
+/////////// VER VISITANTES
+
+bool ver_visitantes(servidor_t * servidor, char** vcomandos){
+	
+	/*fprintf(stdout,"Visitantes:\n", ip_actual);
+ 	fprintf(stdout,"\t%s\n", ip->ip_str);*/
+ 	return true;
+	
+}
+

@@ -9,6 +9,9 @@
 
 #define MAX_VECTORES 257
 
+
+char* chartostring(char sep);
+
 /*
  * Devuelve en un arreglo dinámico terminado en NULL con todos los subsegmentos
  * de ‘str’ separados por el carácter ‘sep’. Tanto el arreglo devuelto como las

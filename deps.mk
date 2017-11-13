@@ -1,0 +1,1 @@
+analog: main.c servidor.o logs.o hash.o abb.o heap.o strutil.o timeutil.o lista.o vector_dinamico.o

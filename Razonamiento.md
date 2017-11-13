@@ -4,9 +4,9 @@
 
 - La estructura principal es un abb donde se guardan las ip usando una funcion que compare sus enteros.
 
-- Un hash_url_cantidad con las claves = urls, y datos = cantidad de ocurrencias
+- Un hash_url con las claves = urls, y datos = cantidad de ocurrencias
 
-- Un  hash_ip_ocurrencias con claves = ips, y datos = un vector dinamico donde su tamaño es la cantidad de ocurrencias, y en cada casilla de contiene el time_t de la misma
+- Un hash_ip con claves = ips, y datos = la ip_str y una sub_struct (horario) que consiste en un time_t y un contador de peticiones
 
 - Un hash_esDoS donde se anotan las ips que son DoS.
 
@@ -35,11 +35,11 @@ y estan ordenadas por fecha y hora
 
 1. Para cada linea del .log  (sabiendo que son todas validas)
    - Separar con `split('\t')` (en tabulaciones) 
-   - Hacer un conteo de solicitudes para cada ip ( en un hash tal vez)
+   - Hacer un conteo de solicitudes para cada ip (en un hash)
    	
-   		- >usar funciones de `timeutil` para calcular las diferencias, estaba pensando en una especie de busqueda binaria entre los horarios
+   		- >usar funciones de `timeutil` para calcular las diferencias, se calcula con corte de control, ya que se ingresan cronológicamente
    		- >si la ip ya pertenecía al hash no calcular tiempos
-   		- Si es DoS (5 peticiones en menos de 2 segundos) guardar esa ip en el hash_esDoS 
+   		- Si es DoS (5 peticiones en menos de 2 segundos) guardar esa ip en el hash_esDoS
 
 2. Vaciar/Rehacer hashes antes de cargar otro archivo
 	

@@ -68,6 +68,13 @@ size_t lista_largo(const lista_t *lista);
 // Post: se eliminaron todos los elementos de la lista.
 void lista_destruir(lista_t *lista, void destruir_dato(void *));
 
+// Destruye la lista dentro de una direccion de la tabla hash. Si se recibe la funcionn destruir_dato por parametro,
+// para cada uno de los elementos de la lista llama a destruir_dato.
+// Pre: la lista fue creada. destruir_dato es una funcionn capaz de destruir
+// los pares (valor, clave) de la lista, o NULL en caso de que no se la utilice.
+// Post: se eliminaron todos los pares de elementos de la lista.
+void lista_destruir_hash(lista_t *lista, void* hash, void destruir_dato(void *, void*));
+
 // Deja la lista en estado vacio. Si se recibe la funcionn destruir_dato por parametro,
 // para cada uno de los elementos de la lista llama a destruir_dato.
 // Pre: la lista fue creada. destruir_dato es una funcionn capaz de destruir
