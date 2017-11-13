@@ -275,8 +275,8 @@ bool ver_mas_visitados(servidor_t * servidor, char** vcomandos){
 	lista_t * desencolados  = lista_crear();
 	if(!desencolados) return false;
 	
-	size_t n = heap_cantidad(servidor->mas_visitados);
-	size_t mostrar = (size_t)atoi(vcomandos[1]);
+	int n = heap_cantidad(servidor->mas_visitados);
+	int mostrar = atoi(vcomandos[1]);
 	url_t* url = NULL;
 	
 	if (mostrar > n) mostrar = n; // maximo posible para mostrar
