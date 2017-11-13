@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TAM_INICIAL 150
+#define TAM_INICIAL 1650
 #define DIV 2
 #define MAX 70
 

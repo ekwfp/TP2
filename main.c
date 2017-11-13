@@ -24,6 +24,14 @@ main - funcionamiento:
 	ejecuta(validado)
 	avanza linea
 	vuelve a (*)
+	
+Modificaciones a los TDA
+	vector dinamico:
+		- vector_obtener devuelve void*
+	abb:
+		- nueva primitiva: abb_inorden_intervalo
+	heap:
+		- nueva primitiva: heap_reorganizar	
 */
 
 int main(int argc,char* argv[]){

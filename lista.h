@@ -84,7 +84,6 @@ void lista_destruir_hash(lista_t *lista, void* hash, void destruir_dato(void *, 
 void lista_vaciar(lista_t *lista, void destruir_dato(void *));
 
 
-
 // ******************************************************************
 //                    PRIMITIVAS DE ITERADOR INTERNO
 // ******************************************************************
@@ -99,15 +98,10 @@ void lista_iterar(lista_t *lista, bool (*visitar)(void *dato, void *extra), void
 //                    PRIMITIVAS DEL ITERADOR
 // ******************************************************************
 
-
-
-
 // Crea un iterador apuntando al inicio de la lista.
 // Pre: Lista creada.
 // Post: El iterador fue creado al inicio de la lista.
 lista_iter_t *lista_iter_crear(lista_t *lista);
-
-
 
 // El iterador avanza una posicion en la lista.
 // Pre: Lista e iterador creados.

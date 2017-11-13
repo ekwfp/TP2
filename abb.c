@@ -324,7 +324,7 @@ void abb_inorden_intervalo (abb_t*arbol, const char* desde, const char* hasta, v
 	while (seguir_iterando && !abb_iter_in_al_final(iter)){
 		char* ip = (char*) abb_iter_in_ver_actual(iter);
 		int cmp = raiz->cmp(ip,hasta);
-		if (cmp >= 0) seguir_iterando = false;
+		if (cmp > 0) seguir_iterando = false;
 		if(seguir_iterando)visit(ip);
 		abb_iter_in_avanzar_desde(iter,desde);
 	}

@@ -14,17 +14,12 @@
  */
 typedef int (*cmp_func_t) (const void *a, const void *b);
 
-
 /* Función de heapsort genérica. Esta función ordena mediante heap_sort
  * un arreglo de punteros opacos, para lo cual requiere que se
  * le pase una función de comparación. Modifica el arreglo "in-place".
  * Nótese que esta función NO es formalmente parte del TAD Heap.
  */
 void heap_sort(void *elementos[], size_t cant, cmp_func_t cmp);
-
-
-
-
 
 /*
  * Implementación de un TAD cola de prioridad, usando un max-heap.
@@ -53,7 +48,8 @@ heap_t *heap_crear(cmp_func_t cmp);
 */
 heap_t *heap_crear_arr(void *arreglo[], size_t n, cmp_func_t cmp);
 
-// actualiza un heap
+//Funcion del tp2
+//Reorganiza prioridades de un heap de maximos cuyos datos hayan sido modificados
 void heap_reorganizar(heap_t* heap);
 
 /* Elimina el heap, llamando a la función dada para cada elemento del mismo.
@@ -88,7 +84,6 @@ void *heap_ver_max(const heap_t *heap);
  * Post: el elemento desencolado ya no se encuentra en el heap.
  */
 void *heap_desencolar(heap_t *heap);
-
 
 void pruebas_heap_alumno(void);
 

@@ -8,7 +8,6 @@
 
 // servidor
 
-
 //destruye las estructuras internas del servidor
 void exit_servidor(int errores, servidor_t* srv, abb_t* abb, heap_t* heap, hash_t* url, hash_t* ip);
 
@@ -18,16 +17,22 @@ void vaciar_hashes(servidor_t* servidor);
 // Recibe un hash con ips y las imprime por pantalla en order creciente
 void reportar_dos(hash_t* hash_dos);
 
+// Recibe un heap y reordena sus prioridades
 void actualizar_visitados(servidor_t* servidor);
 
-
+// recibe un archivo por comando y lo procesa
 bool agregar_archivo(servidor_t* servidor, char** vcomandos);
+
+// muestra las ip que hicieron alguna peticion, dentro de un rango dado
 bool ver_visitantes(servidor_t* servidor, char** vcomandos);
+
+// muestra n urls mas visitadas
 bool ver_mas_visitados(servidor_t* servidor, char** vcomandos);
-		
+
+//corta una linea ya sea LF o CRLF		
 void corte_str(char** linea){
 	char* corte = strchr(*linea, 10); //\n
- 	char* corte2 = strchr(*linea, 13);//\v
+	char* corte2 = strchr(*linea, 13);//\v
 	if (corte) *corte=0;
 	if (corte2) *corte2=0;
 }
@@ -40,7 +45,7 @@ void oki(void){
 	fprintf(stdout, "OK\n");
 }
 
-//destruye las estructuras internas del servidor
+//destruye las estructuras internas del servidor en caso de error al crear
 void exit_servidor(int errores, servidor_t* srv, abb_t* abb, heap_t* heap, hash_t* url, hash_t* ip){
 	switch(errores){
 		case 5: hash_destruir(ip);
@@ -81,7 +86,6 @@ servidor_t* servidor_crear(){
 		exit_servidor(5, servidor, ips,mas_visitados,hash_url,hash_ip);
 		return NULL; 
 	}
-	
 	//asigno
 	servidor->abb_ips = ips;
 	servidor->mas_visitados = mas_visitados;
@@ -95,7 +99,7 @@ servidor_t* servidor_crear(){
 
 int validar_comando(char** tmp_v){ //devuelve el comando a ejecutar
 	char* comando[] = {	AGREGAR, VISITANTES, MAS_VISITADOS};
-	int j=0, i = 0;//,pagos =16;	
+	int j=0, i = 0;	
 	if(tmp_v[0]!=NULL){
 		int valido= -1;
 		for (j=0; j<3; j++)			
@@ -121,7 +125,7 @@ int validar_comando(char** tmp_v){ //devuelve el comando a ejecutar
 				return -3;
 				
 			default: 
-				return 0; // quitar?
+				return 0; 
 		}
 	} 
 	return 0; 
@@ -132,7 +136,6 @@ bool ejecutar_comandos(servidor_t * servidor, char ** vcomandos, int a_ejecutar)
 	switch (a_ejecutar){
 		case 1: //agregar
 			ok = agregar_archivo(servidor, vcomandos);
-			
 			break;
 		case 2: //ver visitantes
 			ok = ver_visitantes(servidor, vcomandos);
@@ -158,7 +161,6 @@ void servidor_destruir(servidor_t * servidor){
 	free(servidor);
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////
 /////////// PROCESOS
 
@@ -171,28 +173,31 @@ bool procesar_log(FILE * log, servidor_t* servidor){
 		char** campos = split(linea,'\t'); // separo la linea en 4 campos
     	ip_t* ip = NULL;
     	url_t * url = NULL;
-    	if( !hash_pertenece(servidor->hash_dos,campos[0])){ // si no es DoS lo proceso, sino no hace falta porque 1) ya es dos => esta en el abb
-	    	if (hash_pertenece(servidor->hash_ip, campos[0])){ //si existe agrego horario 
-	    		ip= hash_obtener(servidor->hash_ip, campos[0]);				
-	    		if(ip_es_dos(ip, campos[1])) 
-	    			hash_guardar(servidor->hash_dos, campos[0], NULL); // solo hace falta listar
+    	char * ip_leida = campos[0]; // ip de la linea log
+    	char * time_leido = campos [1]; // fecha y hora de la linea log
+    	char * url_leida = campos[3]; // url de la linea log
+    	if( !hash_pertenece(servidor->hash_dos,ip_leida)){ // si no es DoS lo proceso, sino no hace falta porque 1) ya es dos => esta en el abb
+	    	if (hash_pertenece(servidor->hash_ip, ip_leida)){ //si existe agrego horario 
+	    		ip= hash_obtener(servidor->hash_ip, ip_leida);				
+	    		if(ip_es_dos(ip, time_leido)){
+	    			hash_guardar(servidor->hash_dos, ip_leida, NULL); // solo hace falta listar
+	    		}
 			}
 			else{ // sino creo nueva ip
-				ip = nueva_ip(campos[0],campos[1]);
-				abb_guardar(servidor->abb_ips,campos[0], ip); // guardo la ip, si ya existe no pasa nada.
-				hash_guardar(servidor->hash_ip, campos[0], ip); // la anoto en el hash
+				ip = nueva_ip(ip_leida,time_leido);
+				abb_guardar(servidor->abb_ips,ip_leida, ip); // guardo la ip, si ya existe no pasa nada.
+				hash_guardar(servidor->hash_ip, ip_leida, ip); // la anoto en el hash
 			}
 		}
-    	if (hash_pertenece(servidor->hash_url, campos[3])){ //si existe suma
-    		url = hash_obtener(servidor->hash_url,campos[3]);
+    	if (hash_pertenece(servidor->hash_url, url_leida)){ //si existe suma
+    		url = hash_obtener(servidor->hash_url,url_leida);
     		url->cantidad++;
-    		//hash_guardar(servidor->hash_url,campos[3],url);
 		} 
 		else{ // sino crea con cantidad en 1  y la mete en el heap
 		// esto permite asegurar que no se van a encolar repetidos en el heap
-			url = nueva_url(campos[3]);
-	    	hash_guardar(servidor->hash_url,campos[3], url );
-	    	//heap_encolar(servidor->mas_visitados, url);
+			url = nueva_url(url_leida);
+	    	hash_guardar(servidor->hash_url,url_leida, url );
+	    	heap_encolar(servidor->mas_visitados, url);
 		}
         free_strv(campos); 
     }
@@ -214,7 +219,7 @@ void vaciar_hashes(servidor_t* servidor){
 	}
 	hash_iter_destruir(iter);
 	
-	// reseteo el hash de DoS
+	// reseteo del hash de DoS
 	hash_destruir(servidor->hash_dos);
 	hash_t * hash_dos = hash_crear(NULL);
 	if (!hash_dos) return;
@@ -237,8 +242,6 @@ bool agregar_archivo(servidor_t * servidor, char** vcomandos){
 	oki();
 	return true; // el ok lo imprime ejecutar_comandos
 }
-
-
 
 // Recibe un hash con ips y las imprime por pantalla en order creciente
 void reportar_dos(hash_t* hash_dos){
@@ -266,28 +269,14 @@ void reportar_dos(hash_t* hash_dos){
 void actualizar_visitados(servidor_t* servidor){
 	if (!servidor) return;
 	if (!servidor->mas_visitados) return;
-	//heap_reorganizar(servidor->mas_visitados);
-	heap_t * heap2 =heap_crear(&cmp_url);
-	heap_destruir(servidor->mas_visitados,NULL);
-	hash_iter_t* iter = hash_iter_crear(servidor->hash_url);
-	while(!hash_iter_al_final(iter)){
-		url_t* url_act = NULL;
-		char* url = (char*) hash_iter_ver_actual(iter);
-		url_act = hash_obtener(servidor->hash_url,url);
-		heap_encolar(heap2, url_act);
-		hash_iter_avanzar(iter);
-	}
-	servidor->mas_visitados = heap2;
-	hash_iter_destruir(iter);
+	heap_reorganizar(servidor->mas_visitados);
 }
 
 
 bool ver_mas_visitados(servidor_t * servidor, char** vcomandos){
 	if(!servidor || !servidor->mas_visitados) return false;
-	
 	lista_t * desencolados  = lista_crear();
 	if(!desencolados) return false;
-	
 	int n = heap_cantidad(servidor->mas_visitados);
 	int mostrar = atoi(vcomandos[1]);
 	if (mostrar > n) mostrar = n;
