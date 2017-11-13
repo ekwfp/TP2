@@ -162,8 +162,8 @@ void dest_ip(void * ip){
 int cmp_url(const void* url1, const void* url2){
 	url_t* temp1 = (url_t*) url1;
 	url_t* temp2 = (url_t*) url2;
-	if ( temp1->cantidad > temp2->cantidad)  	return 1;
-	if ( temp1->cantidad < temp2->cantidad)  	return -1;
+	if ( (!temp2) || ( temp1->cantidad > temp2->cantidad))  	return 1;
+	if ( temp1->cantidad < temp2->cantidad) 	return -1;
 	return 0;
 }
 
