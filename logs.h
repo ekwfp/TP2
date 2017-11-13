@@ -46,7 +46,7 @@ typedef struct url{
 bool validar_ip(char * ip_str);
 
 //detecta sobrecargas de solicitudes desde una ip
-bool ip_es_dos(ip_t** ip, char* h_actual);
+bool ip_es_dos(ip_t* ip, char* h_actual);
 
 
 //recibe una ip en string y devuelve un puntero a una ip, se puede inicializar con un horario

@@ -27,7 +27,7 @@ main - funcionamiento:
 */
 
 int main(int argc,char* argv[]){
-	if (argc!= 1) {	fprintf(stderr,"Error en comando %s", argv[0]); return 1; }
+	if (argc!= 1) {	fprintf(stderr,"Error en comando %s\n", argv[0]); return 1; }
     servidor_t* servidor = servidor_crear();//estructura principal
 	if (servidor == NULL){ servidor_destruir(servidor); return 3; }//!memoria
     int exe = 1;

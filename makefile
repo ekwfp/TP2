@@ -7,7 +7,7 @@ CC = gcc
 CFLAGS = -g -std=c99 -Wall
 CFLAGS += -Wtype-limits -pedantic -Wconversion -Wno-sign-conversion -Werror
 CFLAGS += -Wpointer-arith -Wunreachable-code -Wformat=2
-VFLAGS = --leak-check=full --track-origins=yes --show-reachable=yes
+VFLAGS = --leak-check=full --track-origins=yes #--show-reachable=yes
 GDB_FLAGS = -quiet  -ex 'set pagination off' -ex 'set confirm off'
 
 #Compila y linkea

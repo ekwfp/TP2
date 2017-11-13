@@ -46,10 +46,21 @@ void heap_sort(void *elementos[], size_t cant, cmp_func_t cmp){
 // reorganiza un heap cuyos datos hayan sido modificados
 void heap_reorganizar(heap_t* heap){
 	if (!heap) return;
-	size_t n = heap->cantidad;
+	/*size_t n = heap->cantidad;
 	if (n<2) return;
 	for (size_t i = (n/2); i > 0; i--)
-		downheap(heap->vec,n, i, heap->cmp);
+		downheap(heap->vec,n, i, heap->cmp);*/
+		
+	heap_t* heap2	= heap_crear(heap->cmp);
+	if(!heap2) return;
+	while(!heap_esta_vacio(heap)){
+		heap_encolar(heap2, heap_desencolar(heap));
+		
+	}
+	while(!heap_esta_vacio(heap2)) {
+		heap_encolar(heap, heap_desencolar(heap2));
+	}
+	heap_destruir(heap2,NULL);
 }
 
 /*
@@ -163,18 +174,15 @@ bool heap_esta_vacio(const heap_t *heap){
 	return (heap->cantidad== 0);
 }
 
-
-
 void upheap(vector_t* vector, size_t pos, cmp_func_t cmp){
 	size_t padre = pos/2;
 	void* dato1 =	vector_obtener(vector, pos);
 	void* dato2 = 	vector_obtener(vector, padre);
-	int comp =0;
+	int comp = -1;
 	if (dato1 && dato2){
 		comp = cmp(dato1, dato2);
 		if (comp > 0) { 
 			swap(vector->datos, pos, padre); 
-			//printf("uphipiando");
 			upheap(vector, padre, cmp);
 		}
 		else if (comp == 0) {
@@ -182,7 +190,6 @@ void upheap(vector_t* vector, size_t pos, cmp_func_t cmp){
 		}
 	}
 }
-
 
 /* Agrega un elemento al heap. El elemento no puede ser NULL.
  * Devuelve true si fue una operación exitosa, o false en caso de error.
@@ -195,7 +202,7 @@ bool heap_encolar(heap_t *heap, void *elem){
 	size_t pos =  heap->cantidad;
 	bool guardado = vector_guardar(heap->vec,pos,elem);
 	redimensionar(heap,DUP,0);
-	if (pos>1 && guardado)upheap(heap->vec,heap->cantidad,heap->cmp);
+	if (pos>1 && guardado) upheap(heap->vec,heap->cantidad,heap->cmp);
 	return guardado;
 }
 
@@ -208,7 +215,8 @@ void *heap_ver_max(const heap_t *heap){
 	return vector_obtener(heap->vec,1);
 }
 
-void downheap(vector_t* vector, size_t cant, size_t pos, cmp_func_t cmp) {
+
+void downheap(vector_t* vector, size_t cant, size_t pos, cmp_func_t cmp){
 	if (pos > cant) return;
 	size_t izq_pos = pos*2;
 	size_t der_pos = pos*2 +1;
@@ -217,19 +225,18 @@ void downheap(vector_t* vector, size_t cant, size_t pos, cmp_func_t cmp) {
 	void* dato2 = vector_obtener(vector,izq_pos);
 	void* dato3 = vector_obtener(vector, der_pos);
 	
-	//if (dato1 && dato2 && dato3) {
-		if ( (izq_pos <= cant) && (cmp(dato1,dato2) < 0)) 
+	if (dato1 && (dato2 || dato3)) {
+		if ( dato2 && (izq_pos <= cant) && (cmp(dato1,dato2) < 0)) 
 	 		max = izq_pos;
-	 		dato1 = vector_obtener(vector, max);
- 		if ( (der_pos <= cant) && (cmp(dato1,dato3) < 0)) 
+	 	dato1 = vector_obtener(vector, max);
+ 		if ( dato3 && (der_pos <= cant) && (cmp(dato1,dato3) < 0)) 
  			max = der_pos;
 		if (max != pos) {
 			swap(vector->datos, pos, max);
 			downheap(vector, cant, max, cmp);
 		}
-	//}	
+	}	
 }
-
 
 /* Elimina el elemento con máxima prioridad, y lo devuelve.
  * Si el heap esta vacío, devuelve NULL.
@@ -244,12 +251,12 @@ void *heap_desencolar(heap_t *heap){
 	dato = vector_obtener(heap->vec, 1);
 	dato_ultima = vector_obtener(heap->vec,ultima);
 	vector_guardar(heap->vec,1,dato_ultima);
-	vector_guardar(heap->vec,ultima,NULL);
+	//vector_guardar(heap->vec,ultima,NULL);
 	heap->cantidad--;
 	if (heap->cantidad > TAM_INICIAL)
-	redimensionar(heap,0,DIV);
+		redimensionar(heap,0,DIV);
 	if (heap->cantidad > 1) 
-	downheap(heap->vec, heap->cantidad,1, heap->cmp);
+		downheap(heap->vec, heap->cantidad,1, heap->cmp);
 	return dato;
 }
 

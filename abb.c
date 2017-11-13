@@ -265,3 +265,71 @@ void abb_iter_in_destruir(abb_iter_t* iter){
 	lista_destruir(iter->pila,NULL);
 	free(iter);
 }
+
+
+///////// ITERADOR INORDER, DESDE -HASTA
+////////////////////////////////////////
+
+void listar_izquierdos_desde(const abb_t * arbol, lista_t* iter, const char* desde){
+	if (arbol == NULL) return;
+	if(arbol->izq == NULL || ((arbol->cmp(arbol->izq->clave, desde) < 0 ) ) ) return;
+	apilar(iter,(void*)arbol->izq);
+	listar_izquierdos_desde(arbol->izq, iter,desde);	
+}
+
+//pre: arbol creado
+abb_iter_t *abb_iter_in_crear_desde(const abb_t *arbol, const char* desde){
+	abb_iter_t* abb_iter = calloc(1,sizeof(abb_iter_t));
+	if (!abb_iter)  return NULL;
+	lista_t* pila = lista_crear();
+	if (!pila) return NULL;
+	abb_iter->pila = pila;
+	if(arbol->clave) {
+		apilar(pila,(void*)arbol);
+		listar_izquierdos_desde(arbol, abb_iter->pila,desde);
+	}
+	return abb_iter;
+}
+
+bool abb_iter_in_avanzar_desde(abb_iter_t *iter, const char* desde){
+	if(abb_iter_in_al_final(iter)) return false;
+	abb_t* desapilado = (abb_t*)desapilar(iter->pila);
+	if (!desapilado) return false; 
+	if (desapilado->der) {
+		apilar(iter->pila, desapilado->der);
+		listar_izquierdos(desapilado->der,iter->pila);
+	}
+	return true;
+}
+
+abb_t *abb_obtener_en_intervalo(abb_t *arbol, const char *desde, const char* hasta){
+	if (!arbol || !arbol->clave) return NULL; // no existe ninguna clave dentro del intervalo
+	int cmp1 = arbol->cmp(arbol->clave,desde);
+	int cmp2 = arbol->cmp(arbol->clave,hasta);
+	if ((cmp1 >= 0) && (cmp2 <= 0))	return arbol; //si la clave esta entre [desde,hasta] devuelvo el nodo
+	if (cmp1 < 0){ // si la clave del arbol es menor voy para la derecha
+		if (arbol->der) return abb_obtener_en_intervalo(arbol->der,desde,hasta);
+		return NULL;
+	}
+	//sino, la clave es mas grande que hasta, entonces busco para la izquierda
+	if (arbol->izq)	return abb_obtener_en_intervalo(arbol->izq,desde, hasta);
+	return NULL;
+}
+
+void abb_inorden_intervalo (abb_t*arbol, const char* desde, const char* hasta, void (*visit)(void *)){
+	abb_t* raiz = abb_obtener_en_intervalo(arbol, desde, hasta);
+	if (!raiz) return;
+	abb_iter_t * iter = abb_iter_in_crear_desde(raiz,desde);
+	bool seguir_iterando = true;
+	while (seguir_iterando && !abb_iter_in_al_final(iter)){
+		char* ip = (char*) abb_iter_in_ver_actual(iter);
+		int cmp = raiz->cmp(ip,hasta);
+		if (cmp >= 0) seguir_iterando = false;
+		if(seguir_iterando)visit(ip);
+		abb_iter_in_avanzar_desde(iter,desde);
+	}
+	abb_iter_in_destruir(iter);
+}
+
+
+

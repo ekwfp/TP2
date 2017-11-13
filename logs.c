@@ -21,26 +21,27 @@ bool validar_ip(char * ip_str){
 	return true;
 }
 
-bool ip_es_dos(ip_t** ip, char* h_actual){
-	if (!(*ip)) return false;
-	horario_t * horas = (*ip)->horario;
+bool ip_es_dos(ip_t* ip, char* h_actual){
+	if (!ip) return false;
+	horario_t * horas = ip->horario;
 	time_t time_actual = char_a_time(h_actual);
 	
 	if( horas->n_req_2s == 0) {
-		(*ip)->horario->hora = time_actual;
-		(*ip)->horario->n_req_2s++;
+		ip->horario->hora = time_actual;
+		ip->horario->n_req_2s++;
 		return false;
 	}
 	double diff  = difftime(time_actual,horas->hora);
 	double interv = INTERVALO;
 	//si la diferencia entre la primer hora es <2'' 
 	if (diff < interv) {
-		(*ip)->horario->n_req_2s++; 
-		if((*ip)->horario->n_req_2s >= MAX_INTENTOS) return true; //si ya van 5 es dos
+		ip->horario->n_req_2s++; 
+		if(ip->horario->n_req_2s >= MAX_INTENTOS) return true; //si ya van 5 es dos
+		return false;
 	}
 	//descarto posibilidad 
-	(*ip)->horario->hora = time_actual;
-	(*ip)->horario->n_req_2s = 1;
+	ip->horario->hora = time_actual;
+	ip->horario->n_req_2s = 1;
 	return false;
 }
 

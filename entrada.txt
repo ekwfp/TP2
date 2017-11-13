@@ -1,0 +1,11 @@
+agregar_archivo logs/access001.log
+agregar_archivo logs/access002.log
+agregar_archivo logs/access003.log
+agregar_archivo logs/access004.log
+agregar_archivo logs/access005.log
+agregar_archivo logs/access006.log
+agregar_archivo logs/access007.log
+agregar_archivo logs/access008.log
+agregar_archivo logs/access009.log
+ver_visitantes 110.136.167.100 120.130.130.130
+ver_mas_visitados 5
