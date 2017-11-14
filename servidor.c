@@ -257,7 +257,7 @@ void reportar_dos(hash_t* hash_dos){
 	}
 	while(!heap_esta_vacio(heap)){
 		char * imprimir = heap_desencolar(heap);
-		fprintf(stdout,"\tDoS: %s\n", imprimir);
+		fprintf(stdout,"DoS: %s\n", imprimir);
 		free(imprimir);
 	}
 	hash_iter_destruir(iter);
