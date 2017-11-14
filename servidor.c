@@ -277,11 +277,11 @@ bool ver_mas_visitados(servidor_t * servidor, char** vcomandos){
 	if(!servidor || !servidor->mas_visitados) return false;
 	lista_t * desencolados  = lista_crear();
 	if(!desencolados) return false;
-	int n = heap_cantidad(servidor->mas_visitados);
+	size_t n = heap_cantidad(servidor->mas_visitados);
 	int mostrar = atoi(vcomandos[1]);
-	if (mostrar > n) mostrar = n;
-	
-	fprintf(stdout,"Sitios más visitados:\n");
+	if (mostrar > n) mostrar = (int)n;
+	char s2[] = "\u00E1";
+	fprintf(stdout,"Sitios m%ss visitados:\n", s2);
 	while(mostrar>0){
 		url_t *url = (url_t*) heap_desencolar(servidor->mas_visitados);
 		if(url == NULL){

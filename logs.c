@@ -36,7 +36,7 @@ bool ip_es_dos(ip_t* ip, char* h_actual){
 	//si la diferencia entre la primer hora es <2'' 
 	if (diff < interv) {
 		ip->horario->n_req_2s++; 
-		if(ip->horario->n_req_2s >= MAX_INTENTOS) return true; //si ya van 5 es dos
+		if(ip->horario->n_req_2s > MAX_INTENTOS) return true; //si ya van 5 es dos
 		return false;
 	}
 	//descarto posibilidad 

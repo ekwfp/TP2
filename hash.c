@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TAM_INICIAL 1650
+#define TAM_INICIAL  1650
 #define DIV 2
 #define MAX 70
 
@@ -34,10 +34,9 @@ struct hash_iter {
 
 size_t hashing(const char* llave, size_t tamanio) { 
     long hash, i;
-    char* llavee= strdup(llave);
-    size_t len = strlen(llavee);
-    for(hash = i = 0; i < len; ++i)
-    {
+   	unsigned char* llavee= (unsigned char*)llave;
+    size_t len = strlen(llave);
+    for(hash = i = 0; i<len; ++i){
         hash += llavee[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);
@@ -45,8 +44,7 @@ size_t hashing(const char* llave, size_t tamanio) {
     hash += (hash << 3);
     hash ^= (hash >> 11);
     hash += (hash << 15);
-    free(llavee);
-    return hash%tamanio;
+    return (size_t)hash%tamanio;
 }
 
 
@@ -67,20 +65,11 @@ void destruir_listado_hash(void * dato, void* hash);
 hash_t *hash_crear(hash_destruir_dato_t destruir_dato){
 	hash_t* hash = calloc(1, sizeof(hash_t));
 	if (hash == NULL)	return NULL;
-	
 	vector_t* direcciones = vector_crear(TAM_INICIAL);
 	if (direcciones == NULL){
 		free (hash);
 		return NULL;
 	}
-	
-	/*size_t i = 0;
-	
-	while (i<TAM_INICIAL){
-		direcciones->datos[i] = NULL;
-		i++;
-	}*/
-	
 	for(size_t i=0; i<TAM_INICIAL; i++) direcciones->datos[i]=NULL;
 	hash->direcciones = direcciones;
 	hash->c_elementos = 0;
@@ -118,10 +107,9 @@ lista_iter_t* crear_lista_iter_en_clave(const hash_t* hash, const char * clave, 
 		return iter;
 	}
 	lista_iter_destruir(iter);
+	*direccion = 0;
 	return NULL;
 }
-
-
 
 bool hash_pertenece(const hash_t *hash, const char *clave){
 	size_t dir= 0;
@@ -129,24 +117,6 @@ bool hash_pertenece(const hash_t *hash, const char *clave){
 	if (!iter) return false;
 	lista_iter_destruir(iter);
 	return true;
-	/*if (hash_cantidad(hash) == 0) return false;
-	size_t dir = hashing(clave, hash->tamanio);
-	if (!hash->direcciones->datos[dir])	return false;
-	
-		lista_iter_t* iter = lista_iter_crear(hash->direcciones->datos[dir]);
-		if (!iter) return false;
-		
-		par_t* par_act;
-		while (!lista_iter_al_final(iter)){
-			par_act = lista_iter_ver_actual(iter);
-			if (strcmp(par_act->llave, clave) == 0){
-				lista_iter_destruir(iter);
-				return true;
-			} 
-				lista_iter_avanzar(iter);
-		}
-		lista_iter_destruir(iter);
-		return false;*/
 }
 
 bool hash_guardar(hash_t *hash, const char *clave, void *dato){
@@ -154,52 +124,44 @@ bool hash_guardar(hash_t *hash, const char *clave, void *dato){
     par_t* n_elemento =calloc(1,sizeof(par_t));
 	n_elemento->llave = strdup(clave);
 	n_elemento->dato = dato;
-	
 	if (!hash->direcciones->datos[dir]){ //si cae en la direccion por 1ra vez se crea la lista y se enlista el elemento
 		hash->direcciones->datos[dir]= lista_crear();
 		if (lista_insertar_ultimo(hash->direcciones->datos[dir], n_elemento)){
 			hash->c_elementos++;
             size_t usado = (100*hash->c_elementos)/hash->tamanio; // 70%->redimension
-		    if(usado>= MAX )
-                if(!hash_redimensionar(hash,hash->tamanio*DIV)) return false;
-		return true;
+	        if(usado>= MAX ){
+           		if(!hash_redimensionar(hash,hash->tamanio*DIV)) return false;
+			}
+			return true;
 		} 
-		free(n_elemento->llave);
-		free(n_elemento);
-		return false;
 	} 
 	else{ // si cae en  la misma direccion verificar 2 cosas: si tiene la misma clave, reemplazar dato. sino, enlistar.
-		lista_iter_t* i = lista_iter_crear(hash->direcciones->datos[dir]); 
-		if (i == NULL) return false;
-		bool esta = false;
-		par_t* par_act;
-		while ((!esta) && (!lista_iter_al_final(i))){
-			par_act = lista_iter_ver_actual(i);
-			if (strcmp(par_act->llave, clave) == 0){
-				esta = true;
-				if (hash->destruir != NULL)	hash->destruir(par_act->dato);
-				par_act->dato = dato;
-				lista_iter_destruir(i);
-				free(n_elemento->llave);
-				free(n_elemento);
-				return true;
-			} 
-			lista_iter_avanzar(i);
+		size_t direc = 0;
+		lista_iter_t* iter = crear_lista_iter_en_clave(hash,clave,&direc);
+		if (direc != 0){
+			par_t* par_act = lista_iter_ver_actual(iter);
+			if (hash->destruir != NULL)
+					hash->destruir(par_act->dato);
+			par_act->dato = dato;
+			free(n_elemento->llave);
+			free(n_elemento);
+			lista_iter_destruir(iter);
+			return true;
 		}
-		lista_iter_destruir(i);
+		lista_iter_destruir(iter);
 		if (lista_insertar_ultimo(hash->direcciones->datos[dir], n_elemento)){
 			hash->c_elementos++;
             size_t usado = (100*hash->c_elementos)/hash->tamanio; //70% ->redimension
-		        if(usado>= MAX )
-                    if(!hash_redimensionar(hash,hash->tamanio*DIV)) return false;
+	        if(usado>= MAX ){
+                if(!hash_redimensionar(hash,hash->tamanio*DIV)) return false;
+        	}
 			return true;
 		} 
-		free(n_elemento);
-		free(n_elemento->llave);
-		return false;
 	}
+	free(n_elemento->llave);
+	free(n_elemento);
+	return false;
 }
-
 
 
 void *hash_borrar(hash_t *hash, const char *clave){
@@ -219,40 +181,6 @@ void *hash_borrar(hash_t *hash, const char *clave){
 	if( (hash->tamanio) < (hash->c_elementos / (DIV*DIV)) ) // 25% -> redimension
 		if( !hash_redimensionar(hash, hash->tamanio / DIV) ) return NULL;     
     return dato;      
-   //---------------
-	/*if (hash_cantidad(hash) == 0) return NULL;
-
-	size_t dir = hashing(clave, hash->tamanio);
-
-	if (!hash->direcciones->datos[dir])	return NULL;
-	
-		lista_iter_t* iter = lista_iter_crear(hash->direcciones->datos[dir]);
-		if (!iter)	return NULL;
-		
-		par_t* par_act;
-		while (!lista_iter_al_final(iter)){
-			par_act = lista_iter_ver_actual(iter);
-			if (strcmp(par_act->llave, clave) == 0){
-				par_t* elem = (lista_iter_borrar(iter));
-				lista_iter_destruir(iter);
-				void* dato = elem->dato;
-				free(elem->llave);
-				free(elem);
-				hash->c_elementos--;
-				if (lista_esta_vacia(hash->direcciones->datos[dir])){
-					lista_destruir(hash->direcciones->datos[dir], NULL);
-					hash->direcciones->datos[dir] = NULL;
-				}
-                
-				if( (hash->tamanio) < (hash->c_elementos / (DIV*DIV)) ) // 25% -> redimension
-					if( !hash_redimensionar(hash, hash->tamanio / DIV) )
-                        return NULL; 
-				return dato;
-			} 
-				lista_iter_avanzar(iter);
-		}
-		lista_iter_destruir(iter);
-		return NULL;*/
 }
 
 void *hash_obtener(const hash_t *hash, const char *clave){
@@ -263,22 +191,7 @@ void *hash_obtener(const hash_t *hash, const char *clave){
 	dato =((par_t*)lista_iter_ver_actual(iter))->dato;
 	lista_iter_destruir(iter);
 	return dato;
-		/*lista_iter_t* iter = lista_iter_crear(hash->direcciones->datos[dir]);
-		if (!iter)	return NULL;
-		par_t* par_act;
-		while (!lista_iter_al_final(iter)){
-			par_act = lista_iter_ver_actual(iter);
-			if (strcmp(par_act->llave, clave) == 0){
-				lista_iter_destruir(iter);
-				return par_act->dato;
-			} 
-				lista_iter_avanzar(iter);
-		}
-		lista_iter_destruir(iter);
-		return NULL;*/
 }
-
-
 
 hash_iter_t *hash_iter_crear(const hash_t *hash){
 	hash_iter_t* iter = calloc(1,sizeof(hash_iter_t));
@@ -287,7 +200,6 @@ hash_iter_t *hash_iter_crear(const hash_t *hash){
 	iter->act = NULL;
 	iter->dir_actual = 0;
 	iter->iteradas = 0;
-    
 	if (iter->hash->c_elementos != 0){		
 		lista_iter_t* buscador = NULL;
 		int i = hash_buscarlista(iter, &buscador, 0);
@@ -303,10 +215,6 @@ hash_iter_t *hash_iter_crear(const hash_t *hash){
 	}
 	return iter;
 }
-
-
-
-
 
 int hash_buscarlista(hash_iter_t* iter,  lista_iter_t** buscador, size_t i){
 	size_t j = i;
@@ -333,12 +241,11 @@ bool hash_iter_avanzar(hash_iter_t *iter){
 		if (i != -1) {
 			lista_iter_destruir(iter->act);
 			iter->act = buscador;
-			iter->dir_actual = i;
+			iter->dir_actual = (size_t)i;
 			return true;
 		} 
 			return false;
-	} 
-	//else
+	}
 	if (lista_iter_avanzar(iter->act)){
 		iter->iteradas++;
 		if (lista_iter_al_final(iter->act)) {
@@ -347,7 +254,7 @@ bool hash_iter_avanzar(hash_iter_t *iter){
 			if (i != -1){
 				lista_iter_destruir(iter->act);
 				iter->act = buscador;
-				iter->dir_actual = i;
+				iter->dir_actual = (size_t)i;
 				return true;
 			} 
 			return false;
@@ -363,12 +270,12 @@ const char * hash_iter_ver_actual(const hash_iter_t *iter){
 }
 
 bool hash_iter_al_final(const hash_iter_t *iter){
-	if ((iter->hash->c_elementos < iter->iteradas) || (iter->hash->c_elementos == 0)) return true; //cuando se itera 1 vez mas que la cantidad de elementos, se esta al final. 
+	if ((iter->hash->c_elementos < iter->iteradas) || (iter->hash->c_elementos == 0)) return true;
 	return false;
 }
 
 void hash_iter_destruir(hash_iter_t* iter){
-	if (iter->act)	lista_iter_destruir(iter->act); //si habia un iterador lista creado se lo destruye
+	if (iter->act)	lista_iter_destruir(iter->act);
 	free(iter);
 }
 
@@ -393,53 +300,39 @@ void hash_destruir(hash_t *hash){
 }
 
 bool hash_redimensionar(hash_t* hash, size_t tam){
-	if (hash->c_elementos == 0)
-		return vector_redimensionar(hash->direcciones, tam);
-
+	if (hash->c_elementos == 0)	return vector_redimensionar(hash->direcciones, tam);
 	lista_t* lista_elementos = lista_crear();
-    
     if (!lista_elementos) return false;
-    
 	hash_iter_t* iter = hash_iter_crear(hash);
-    
     if (!iter) return false;
-    
     size_t nueva_dir; //rehasheo
 	size_t dir = iter->dir_actual;
 	lista_iter_t* lista_iter = iter->act;
 	lista_t* lista_newdir = NULL;
 	par_t* par_act = NULL;
-
 	while (!hash_iter_al_final(iter)){ //guarda temportalmente todos los elementos
-		
 		if (iter->act)	lista_insertar_ultimo(lista_elementos, lista_iter_ver_actual(iter->act));
-			
 		hash_iter_avanzar(iter);
-        
 		if (iter->act != lista_iter){
 			lista_destruir(hash->direcciones->datos[dir], NULL);
 			dir = iter->dir_actual;
 			lista_iter = iter->act;
-			
 		}
-	}	hash_iter_destruir(iter);
-
+	}
+	hash_iter_destruir(iter);
 	vector_redimensionar(hash->direcciones, tam);
     hash->tamanio= tam;
 	for (size_t i=0; i<tam; i++)	hash->direcciones->datos[i] = NULL; // re-inicializa el vector
-
 	while (!lista_esta_vacia(lista_elementos)){
 		par_act = lista_borrar_primero(lista_elementos); //paso elemento al vector
 		nueva_dir = hashing( par_act->llave, tam ); // reasigno direccion
 		lista_newdir = hash->direcciones->datos[nueva_dir];
 		if (!lista_newdir){
 			lista_newdir = lista_crear();
-			
 			hash->direcciones->datos[nueva_dir] = lista_newdir;
 		}
 		lista_insertar_ultimo(lista_newdir, par_act);
 	}
-	
 	lista_destruir(lista_elementos, NULL); //tmp
 	return true;
 }

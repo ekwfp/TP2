@@ -117,8 +117,8 @@ abb_t* abb_min_max(abb_t* min, abb_t* max){
 void _abb_borrar(abb_t *arbol, const char *clave, void** dato){
 	if (!arbol || !arbol->clave) {*dato = NULL; return;}
 	void* swap_dato = NULL;
-	abb_t* swap;
-	char* swap_clave;
+	abb_t* swap = NULL;
+	char* swap_clave = NULL;
 	int cmp = (arbol->cmp(clave, arbol->clave));
 
  	if (cmp == 0){
