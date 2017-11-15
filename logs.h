@@ -25,16 +25,18 @@ en el tp dice "no es necesario memorizar las entradas entre distintos archivos l
 struct ip;
 struct url;
 
-typedef struct horario{
-	int n_req_2s; // numero de peticiones en 2 segundos, si es 5 o mayor es DoS
+/*typedef struct horario{
+	//lista_t * horas
+	//int n_req_2s; // numero de peticiones en 2 segundos, si es 5 o mayor es DoS
 	//vector_t* horarios; // se guarda temporalmente algunos horarios para buscar DoS
-	time_t hora;
+	char* hora;
 }horario_t;
-
+*/
 
 typedef struct ip{
 	char* ip_str; // la ip en string "192.168.0.1"   -> hara falta?
-	horario_t* horario; 
+	//horario_t* horario; 
+	lista_t* horarios;
 }ip_t;
 
 typedef struct url{
