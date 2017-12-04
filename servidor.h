@@ -34,7 +34,7 @@ servidor_t * servidor_crear();
 
 /*Valida un comando del programa ingresado por stdin, devuelve el numero de comando validado o su negativo
 si hay fallas en sus parametros. 0 si no existe*/
-int validar_comando(char** comando);
+int validar_comando(char** tmp_v);
 
 /*Ejecuta un comando del programa ( agregar_archivo x, ver_visitantes x y,
 ver_mas_visitados x ). PRE: Debe ser valido en sintaxis*/

@@ -44,18 +44,16 @@ int main(int argc,char* argv[]){
 		char* linea = NULL;
 		size_t capacidad = 0; ssize_t leidos; //combo getline
 		leidos = getline(&linea,&capacidad,stdin); 
-		if (leidos == -1){ //si EOF va a finalizar
+		if (leidos < 1){ //si EOF va a finalizar
 			free(linea);
 			break;
 	    }
 	 	corte_str(&linea);
-	    char* buffer = linea;
-		vcomando= split(buffer,' '); //separo stdin
+		vcomando= split(linea,' '); //separo stdin
 		if (vcomando==NULL) { //problema spliteando
-        	free(vcomando);
+        //	free_strv(vcomando);
         	free(linea);
-        	servidor_destruir(servidor);
-        	return 3;
+        	break;
 		}
       	exe = validar_comando(vcomando);
       	if(exe < 1) { //si no es valido

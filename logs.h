@@ -9,34 +9,18 @@
 #include "strutil.h"
 #include "timeutil.h"
 
-/*
-Las lineas del log tienen estos campos:
-		ip 
-		fecha y hora
-		metodo
-		url
-
-y estan ordenadas por fecha y hora
-
-en el tp dice "no es necesario memorizar las entradas entre distintos archivos log"
-
-*/
-
 struct ip;
 struct url;
 
-/*typedef struct horario{
-	//lista_t * horas
-	//int n_req_2s; // numero de peticiones en 2 segundos, si es 5 o mayor es DoS
-	//vector_t* horarios; // se guarda temporalmente algunos horarios para buscar DoS
-	char* hora;
+typedef struct horario{
+	int n_req_2s; // numero de peticiones en 2 segundos, si es 5 o mayor es DoS
+	time_t hora;
 }horario_t;
-*/
+
 
 typedef struct ip{
 	char* ip_str; // la ip en string "192.168.0.1"   -> hara falta?
-	//horario_t* horario; 
-	lista_t* horarios;
+	horario_t* horario; 
 }ip_t;
 
 typedef struct url{

@@ -97,20 +97,22 @@ servidor_t* servidor_crear(){
 	return servidor;
 }
 
-int validar_comando(char** tmp_v){ //devuelve el comando a ejecutar
+int validar_comando(char** tmp_v){ 
+	//devuelve el comando a ejecutar
 	char* comando[] = {	AGREGAR, VISITANTES, MAS_VISITADOS};
 	int j=0, i = 0;	
-	if(tmp_v[0]!=NULL){
+	if(tmp_v && tmp_v[0]!=NULL){
 		int valido= -1;
 		for (j=0; j<3; j++)			
 			if ((strcmp (tmp_v[i], comando[j])) == 0) {valido= j; break;} //busca el comando a validar
 		switch (valido){
 			case 0: //caso de agregar 
-				if ((tmp_v[2] == NULL) && (tmp_v[1]) ) return 1; // si hay un y solo un parametro
+			//	if ((tmp_v[2] == NULL) && (tmp_v[1]) ) return 1; // si hay un y solo un parametro
+				if ((tmp_v[1] != NULL) && (tmp_v[2] == NULL)) return 1;
 				return -1;
 				
 			case 1: //visitantes
-				if ( (tmp_v[3] == NULL ) && (tmp_v[1] && tmp_v[2]) ){ // si hay dos y solo dos parametros
+				if ( (tmp_v[1] != NULL) && (tmp_v[2] != NULL) && (tmp_v[3] == NULL )){ // si hay dos y solo dos parametros
 					bool ip1 = validar_ip(tmp_v[1]);
 					bool ip2 = validar_ip(tmp_v[2]);
 					if (ip1 && ip2) return 2;
@@ -118,7 +120,7 @@ int validar_comando(char** tmp_v){ //devuelve el comando a ejecutar
 				return -2;
 				
 			case 2: //ver mas visitados
-				if((tmp_v[2] == NULL )&& (tmp_v[1] != NULL) ){ // si hay un y solo un parametro
+				if((tmp_v[1] != NULL) && (tmp_v[2] == NULL )){ // si hay un y solo un parametro
 					int val = atoi(tmp_v[1]);
 					if( val> 0 ) return 3; 
 				}
@@ -131,7 +133,8 @@ int validar_comando(char** tmp_v){ //devuelve el comando a ejecutar
 	return 0; 
 }
 
-bool ejecutar_comandos(servidor_t * servidor, char ** vcomandos, int a_ejecutar){  //el servidor, la lista de comandos, el numero de comando(devuelto por la validacion)
+bool ejecutar_comandos(servidor_t * servidor, char ** vcomandos, int a_ejecutar){  
+//el servidor, la lista de comandos, el numero de comando(devuelto por la validacion)
 	bool ok = true;
 	switch (a_ejecutar){
 		case 1: //agregar
@@ -176,7 +179,8 @@ bool procesar_log(FILE * log, servidor_t* servidor){
     	char * ip_leida = campos[0]; // ip de la linea log
     	char * time_leido = campos [1]; // fecha y hora de la linea log
     	char * url_leida = campos[3]; // url de la linea log
-    	if( !hash_pertenece(servidor->hash_dos,ip_leida)){ // si no es DoS lo proceso, sino no hace falta porque 1) ya es dos => esta en el abb
+    	if( !hash_pertenece(servidor->hash_dos,ip_leida)){ 
+		// si no es DoS lo proceso, sino no hace falta porque 1) ya es dos => esta en el abb
 	    	if (hash_pertenece(servidor->hash_ip, ip_leida)){ //si existe agrego horario 
 	    		ip= hash_obtener(servidor->hash_ip, ip_leida);				
 	    		if(ip_es_dos(ip, time_leido)){
@@ -207,7 +211,7 @@ bool procesar_log(FILE * log, servidor_t* servidor){
 
 //vacia los hashes dos y los horarios de ip
 void vaciar_hashes(servidor_t* servidor){
-	hash_iter_t* iter = hash_iter_crear(servidor->hash_dos);
+	hash_iter_t* iter = hash_iter_crear(servidor->hash_ip);
 	if(!iter) return;
 	const char* ip_str = NULL;
 	ip_t* ip_actual = NULL;
@@ -240,7 +244,7 @@ bool agregar_archivo(servidor_t * servidor, char** vcomandos){
 	reportar_dos(servidor->hash_dos);
 	fclose(log);
 	oki();
-	return true; // el ok lo imprime ejecutar_comandos
+	return true; 
 }
 
 // Recibe un hash con ips y las imprime por pantalla en order creciente

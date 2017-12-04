@@ -7,5 +7,9 @@ agregar_archivo logs/access006.log
 agregar_archivo logs/access007.log
 agregar_archivo logs/access008.log
 agregar_archivo logs/access009.log
-ver_visitantes 110.136.167.100 120.130.130.130
-ver_mas_visitados 5
+ver_visitantes 80.000.002.020 84.000.000.000
+ver_visitantes 83.149.9.216 83.149.9.216
+ver_visitantes 82.200.200.200 83.149.9.216
+ver_visitantes 83.149.9.216 84.000.000.000
+ver_visitantes 83.149.9.215 83.149.9.217
+ver_visitantes 80.255.255.255 80.0.0.0

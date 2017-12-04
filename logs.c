@@ -5,8 +5,6 @@
 #define MAX_INTENTOS 5
 #define INTERVALO 2
 
-
-
 //revisa la sintaxis de una ip en formato str
 bool validar_ip(char * ip_str){
 	char** tmp_ip_str= split(ip_str,'.');
@@ -21,59 +19,41 @@ bool validar_ip(char * ip_str){
 	return true;
 }
 
-size_t longitud_lista(lista_t* lista){
-	lista_iter_t* iter = lista_iter_crear(lista);
-	size_t longitud = 0;
-	while (!lista_iter_al_final(iter)){
-		longitud++;
-		lista_iter_avanzar(iter);
-	}
-	lista_iter_destruir(iter);
-	return longitud;
-}
-
 bool ip_es_dos(ip_t* ip, char* h_actual){
-
-	//Con la funcion que teniamos antes, nos comiamos muchos casos, ponele que tenias un log con la ip en los segundos 1,2,2,3,3,3 La funcion que teniamos no tiraba dos
-	//Lo que hice fue modicar la estructura ip, y le puse una lista. A esa lista la voy a ir llenando
-	// con los strings de los horarios (en memoria dinamica).
-
 	if (!ip) return false;
-	time_t time_actual = char_a_time(h_actual); //creo el time_t para poder hacer el diff
-	lista_t* horarios = ip->horarios;
-	char* str_guardado = strdup(h_actual); //aca pido memoria para el string
-	double interv = INTERVALO;
-	while (!lista_esta_vacia(horarios)){ //itero hasta que la lista este vacia NOTA: Si entra en el while, y se vuelve vacia, significa que no pudo entrar en el if de la diferencia, entonces
-		// significa que los horarios de antes no son "compatibles" con el nuevo horario (o sea, la diferencia de los horarios anteriores es mayor a 2)
-		char* hora_str = (char*)(lista_ver_primero(horarios));
-		time_t hora = char_a_time(hora_str); //creo el time_t para poder hacer el diff
-		double diff  = difftime(time_actual,hora);
-		if (diff < interv){
-			lista_insertar_ultimo(horarios,str_guardado); //si estoy dentro del intervalo de segundos, inserto el str
-			if(longitud_lista(horarios) >= MAX_INTENTOS){ //si llego a 5, devuelvo true
-				return true; //si ya van 5 es dos
-			}	
-			return false;
-		
-		}
-		free(lista_borrar_primero(horarios));
+	horario_t * horas = ip->horario;
+	time_t time_actual = char_a_time(h_actual);
+	
+	if( horas->n_req_2s == 0) {
+		ip->horario->hora = time_actual;
+		ip->horario->n_req_2s++;
+		return false;
 	}
-
-	lista_insertar_primero(horarios,str_guardado); 
-
+	double diff  = difftime(time_actual,horas->hora);
+	double interv = INTERVALO;
+	//si la diferencia entre la primer hora es <2'' 
+	if (diff < interv) {
+		ip->horario->n_req_2s++; 
+		if(ip->horario->n_req_2s >= MAX_INTENTOS) return true; //si ya van 5 es dos
+		return false;
+	}
+	//descarto posibilidad 
+	ip->horario->hora = time_actual;
+	ip->horario->n_req_2s = 1;
 	return false;
 }
 
-/*horario_t * nuevo_horario(char* h_str){
+horario_t * nuevo_horario(char* h_str){
 	horario_t* horario = calloc(1,sizeof(horario_t));
 	if(!horario) return NULL;
-	char* hora = strdup(h_str);
+	horario->n_req_2s = 0;
 	if(h_str){
-	 	horario->hora = hora;
+	 	horario->hora = char_a_time(h_str);
+	 	horario->n_req_2s++;
 	 }
 	return horario;
 }
-*/
+
 
 //recibe una linea del log y la parte, se puede iniciar la lista de horarios con el segundo parametro
 ip_t* nueva_ip(char* ip_str, char* horario){
@@ -84,13 +64,12 @@ ip_t* nueva_ip(char* ip_str, char* horario){
 		free(ip);
 		return NULL;
 	}
-	lista_t* horarios = lista_crear();
-	if (!horarios){
+	ip->horario = nuevo_horario(horario);
+	if(!horario) {
 		free(ip->ip_str);
-		free(ip);
+		free(ip); 
 		return NULL;
 	}
-	ip->horarios = horarios;
 	return ip;
 }
 
@@ -168,17 +147,13 @@ int cmp_ips_inversa (const void * ip1, const void * ip2){
 	free_strv(ipn2);
 	return 0;
 }
-void destruir_horarios (void* horario){
-	//horario_t* horario_p = (horario_t*)horario;
-	//free(horario_p->hora);
-	free(horario);
-}
+
 // destruye un ip_t
 void dest_ip(void * ip){
 	 if (!ip) return;
 	 ip_t* temp = (ip_t*) ip;
 	 free(temp->ip_str);
-	 lista_destruir(temp->horarios,destruir_horarios);
+	 free(temp->horario);
 	 free(temp);
 }
 
